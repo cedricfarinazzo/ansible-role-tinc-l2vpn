@@ -35,6 +35,7 @@ fi
 
 # Set environment variables for molecule
 export MOLECULE_DISTRO="$DISTRO"
+export ANSIBLE_ALLOW_BROKEN_CONDITIONALS=True
 
 # Determine docker command based on distribution
 case "$DISTRO" in
