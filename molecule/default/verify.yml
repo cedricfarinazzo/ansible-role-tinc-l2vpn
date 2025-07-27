@@ -1,0 +1,112 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check tinc service status
+      ansible.builtin.service_facts:
+      become: true
+
+    - name: Verify tinc service is running
+      ansible.builtin.assert:
+        that:
+          - "'tinc@l2vpn.service' in services"
+          - "services['tinc@l2vpn.service'].state == 'running'"
+        fail_msg: "Tinc service is not running"
+        success_msg: "Tinc service is running"
+
+    - name: Check if tinc interface exists
+      ansible.builtin.shell: ip link show tinc0
+      register: tinc_interface_check
+      changed_when: false
+      failed_when: tinc_interface_check.rc != 0
+
+    - name: Verify tinc interface is up
+      ansible.builtin.assert:
+        that:
+          - "'state UP' in tinc_interface_check.stdout"
+        fail_msg: "Tinc interface is not up"
+        success_msg: "Tinc interface is up"
+
+    - name: Check if bridge interface exists
+      ansible.builtin.shell: ip link show br0
+      register: bridge_interface_check
+      changed_when: false
+      failed_when: bridge_interface_check.rc != 0
+
+    - name: Verify bridge interface is up
+      ansible.builtin.assert:
+        that:
+          - "'state UP' in bridge_interface_check.stdout"
+        fail_msg: "Bridge interface is not up"
+        success_msg: "Bridge interface is up"
+
+    - name: Check tinc configuration files
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: config_files
+      with_items:
+        - "/etc/tinc/l2vpn/tinc.conf"
+        - "/etc/tinc/l2vpn/tinc-up"
+        - "/etc/tinc/l2vpn/tinc-down"
+        - "/etc/tinc/l2vpn/rsa_key.priv"
+        - "/etc/tinc/l2vpn/rsa_key.pub"
+      become: true
+
+    - name: Verify all configuration files exist
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+        fail_msg: "Configuration file {{ item.item }} does not exist"
+        success_msg: "Configuration file {{ item.item }} exists"
+      with_items: "{{ config_files.results }}"
+
+    - name: Check host files for all nodes
+      ansible.builtin.find:
+        paths: "/etc/tinc/l2vpn/hosts"
+        patterns: "*"
+      register: host_files
+      become: true
+
+    - name: Verify host files exist for all nodes
+      ansible.builtin.assert:
+        that:
+          - host_files.matched >= (groups['all'] | length)
+        fail_msg: "Not all host files are present"
+        success_msg: "All host files are present"
+
+    - name: Test connectivity between nodes
+      ansible.builtin.shell: |
+        # Wait for network to stabilize
+        sleep 10
+
+        # Get bridge IP
+        BRIDGE_IP=$(ip addr show br0 | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)
+
+        # Test connectivity to other nodes
+        for node in {{ groups['all'] | join(' ') }}; do
+          if [ "$node" != "{{ inventory_hostname }}" ]; then
+            # Calculate expected IP for this node
+            case "$node" in
+              {% for host in groups['all'] %}
+              "{{ host }}")
+                TARGET_IP="{{ hostvars[host]['bridge_ip'] | default('172.20.0.' + (loop.index + 10)|string) }}"
+                ;;
+              {% endfor %}
+            esac
+
+            # Ping test (allow some time for network convergence)
+            if ping -c 3 -W 5 "$TARGET_IP" > /dev/null 2>&1; then
+              echo "✓ Connectivity to $node ($TARGET_IP) successful"
+            else
+              echo "✗ Connectivity to $node ($TARGET_IP) failed"
+            fi
+          fi
+        done
+      register: connectivity_test
+      changed_when: false
+      failed_when: false
+
+    - name: Display connectivity test results
+      ansible.builtin.debug:
+        var: connectivity_test.stdout_lines

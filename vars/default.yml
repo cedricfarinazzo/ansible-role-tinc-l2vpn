@@ -1,0 +1,10 @@
+---
+# Default OS variables
+tinc_config_path: "/etc/tinc"
+tinc_systemd_path: "/etc/systemd/system"
+tinc_networks_file: "/etc/tinc/nets.boot"
+
+# Network tools required
+required_packages:
+  - bridge-utils
+  - iproute2

@@ -1,0 +1,51 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: tinc-node1
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-debian12}-ansible:latest
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
+    networks:
+      - name: tinc-network
+  - name: tinc-node2
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-debian12}-ansible:latest
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
+    networks:
+      - name: tinc-network
+  - name: tinc-node3
+    image: geerlingguy/docker-${MOLECULE_DISTRO:-debian12}-ansible:latest
+    command: ${MOLECULE_DOCKER_COMMAND:-""}
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    cgroupns_mode: host
+    privileged: true
+    pre_build_image: true
+    networks:
+      - name: tinc-network
+provisioner:
+  name: ansible
+  inventory:
+    group_vars:
+      all:
+        tinc_debug_level: 2
+    host_vars:
+      tinc-node1:
+        bridge_ip: "172.20.0.11"
+      tinc-node2:
+        bridge_ip: "172.20.0.12"
+      tinc-node3:
+        bridge_ip: "172.20.0.13"
+verifier:
+  name: ansible

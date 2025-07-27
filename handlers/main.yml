@@ -1,0 +1,28 @@
+---
+- name: Restart tinc
+  ansible.builtin.service:
+    name: "tinc@{{ tinc_netname }}"
+    state: restarted
+  become: true
+  listen: "restart tinc"
+
+- name: Reload tinc
+  ansible.builtin.service:
+    name: "tinc@{{ tinc_netname }}"
+    state: reloaded
+  become: true
+  listen: "reload tinc"
+
+- name: Start tinc
+  ansible.builtin.service:
+    name: "tinc@{{ tinc_netname }}"
+    state: started
+  become: true
+  listen: "start tinc"
+
+- name: Stop tinc
+  ansible.builtin.service:
+    name: "tinc@{{ tinc_netname }}"
+    state: stopped
+  become: true
+  listen: "stop tinc"

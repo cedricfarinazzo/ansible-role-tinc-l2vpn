@@ -1,0 +1,11 @@
+---
+# RedHat family specific variables
+tinc_package: tinc
+tinc_user: tinc
+tinc_group: tinc
+
+# Network tools required for RHEL/CentOS
+required_packages:
+  - bridge-utils
+  - iproute
+  - iptables
