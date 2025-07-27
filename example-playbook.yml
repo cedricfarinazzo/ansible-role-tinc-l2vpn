@@ -1,0 +1,54 @@
+---
+# Example playbook for setting up tinc L2VPN
+# Save this as site.yml and create an inventory with your hosts
+
+- name: Setup tinc L2VPN mesh network
+  hosts: tinc_nodes
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: .
+
+  # Optional: Override default variables
+  vars:
+    # Custom network addressing
+    tinc_address_prefix: "10.30.30"
+    bridge_address_prefix: "192.168.100"
+
+    # Custom network name
+    tinc_netname: "myvpn"
+
+    # Enable key rotation
+    tinc_key_rotation_enabled: true
+    tinc_key_rotation_days: 180
+
+    # Enhanced security
+    tinc_cipher: "aes-256-gcm"
+    tinc_digest: "sha512"
+
+    # Debugging
+    tinc_debug_level: 2
+
+  # Example inventory (save as inventory.yml):
+  # ---
+  # all:
+  #   children:
+  #     tinc_nodes:
+  #       hosts:
+  #         server1:
+  #           ansible_host: 1.2.3.4
+  #           bridge_ip: "192.168.100.10"
+  #         server2:
+  #           ansible_host: 5.6.7.8
+  #           bridge_ip: "192.168.100.20"
+  #         client1:
+  #           ansible_host: 192.168.1.100
+  #           bridge_ip: "192.168.100.30"
+  #       vars:
+  #         # Example: server1 and server2 will not try to connect directly to client1
+  #         # (useful when client1 is behind NAT)
+  #         tinc_client_only_peers: ["client1"]
+
+  # Usage:
+  # ansible-playbook -i inventory.yml site.yml

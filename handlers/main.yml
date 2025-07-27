@@ -26,3 +26,9 @@
     state: stopped
   become: true
   listen: "stop tinc"
+
+- name: Reload sysctl
+  ansible.builtin.shell: sysctl -p
+  become: true
+  listen: "Reload sysctl"
+
