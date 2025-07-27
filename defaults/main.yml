@@ -67,3 +67,8 @@ tinc_pid_file: "/var/run/tinc.{{ tinc_netname }}.pid"
 # Logging configuration
 tinc_debug_level: 1                  # Debug level (0-5)
 tinc_log_file: ""                    # Log file path (empty = syslog)
+
+# Paths configuration
+tinc_config_path: "/etc/tinc"
+tinc_systemd_path: "/etc/systemd/system"
+tinc_networks_file: "/etc/tinc/nets.boot"
