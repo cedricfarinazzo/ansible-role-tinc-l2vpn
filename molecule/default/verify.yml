@@ -14,7 +14,6 @@
         - "/etc/tinc/l2vpn/tinc-up"
         - "/etc/tinc/l2vpn/tinc-down"
         - "/etc/tinc/l2vpn/rsa_key.priv"
-        - "/etc/tinc/l2vpn/rsa_key.pub"
       become: true
 
     - name: Verify all configuration files exist
