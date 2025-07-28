@@ -39,31 +39,11 @@
         fail_msg: "Not all host files are present"
         success_msg: "All host files are present"
 
-    - name: Verify tinc configuration syntax
-      ansible.builtin.shell: |
-        if command -v tincd >/dev/null 2>&1; then
-          tincd -n l2vpn -K < /dev/null
-        else
-          echo "tincd not available in container - configuration files created successfully"
-        fi
-      register: config_check
-      changed_when: false
-      failed_when: false
-      become: true
-
-    #- name: Display configuration check results  
-    #  ansible.builtin.debug:
-    #    var: config_check.stdout_lines
-
     - name: Verify systemd service file exists
       ansible.builtin.stat:
         path: "/etc/systemd/system/multi-user.target.wants/tinc@l2vpn.service"
       register: service_file
       become: true
-
-    #- name: Display service status
-    #  ansible.builtin.debug:
-    #    msg: "Service file exists: {{ service_file.stat.exists }}"
 
     - name: Show created configuration files
       ansible.builtin.debug:
