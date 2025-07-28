@@ -57,10 +57,15 @@ tinc_service_enabled: true             # Enable on boot
 
 # Network settings
 tinc_netname: l2vpn                    # Network name
-tinc_interface: tinc0                  # Interface name
 tinc_mode: switch                      # Operating mode (switch/router)
 tinc_port: 655                        # TCP/UDP port for tinc
 tinc_device_type: tap                  # Device type (tap for L2)
+
+# Hostname configuration
+tinc_hostname: ""                     # Override tinc hostname for this host
+                                      # If empty, sanitized version of inventory_hostname is used
+                                      # Must contain only [A-Za-z0-9_] characters
+                                      # Must be unique across all hosts
 
 # IP configuration
 tinc_address_prefix: "10.20.20"       # IP prefix for mesh network
@@ -182,6 +187,39 @@ This role has **zero external dependencies** and uses only:
 
 ## 🎯 Usage Examples
 
+### Hostname Considerations
+
+Tinc requires hostnames that contain only `[A-Za-z0-9_]` characters. If your Ansible inventory hostnames contain invalid characters (dots, dashes, etc.), the role will automatically sanitize them:
+
+```yaml
+# Example inventory with problematic hostnames
+[tinc_nodes]
+server-1.example.com
+node-2.internal
+test.host.local
+
+# Automatically sanitized to:
+# server_1_example_com
+# node_2_internal  
+# test_host_local
+```
+
+For custom hostnames, use the `tinc_hostname` variable:
+```yaml
+# host_vars/server-1.example.com.yml
+tinc_hostname: "server1"
+
+# host_vars/node-2.internal.yml  
+tinc_hostname: "node2"
+```
+
+**Important**: Each host must have a unique tinc hostname. The role will fail if duplicates are detected.
+
+**Recommendations**:
+- Keep tinc hostnames short and descriptive (e.g., `server1`, `hub`, `edge_node`)
+- Avoid using dots, dashes, or spaces in inventory hostnames if possible
+- Use custom `tinc_hostname` when you need predictable, clean hostnames
+
 ### Basic Multi-Site Setup
 ```yaml
 - hosts: tinc_nodes
@@ -225,6 +263,29 @@ bridge_ip: "172.20.0.100"
 # host_vars/node2.yml
 tinc_ip: "10.20.20.200"
 bridge_ip: "172.20.0.200"
+```
+
+### Custom Connection Configuration
+
+When using `tinc_connect_to`, you can specify either inventory hostnames (which will be auto-sanitized) or custom tinc hostnames:
+
+```yaml
+# Using inventory hostnames (auto-sanitized)
+tinc_connect_to:
+  - server-1.example.com  # Will connect to "server_1_example_com"
+  - hub.internal          # Will connect to "hub_internal"
+
+# Using custom tinc hostnames
+# host_vars/server-1.example.com.yml
+tinc_hostname: "server1"
+
+# host_vars/hub.internal.yml  
+tinc_hostname: "hub"
+
+# main playbook
+tinc_connect_to:
+  - server1  # Will connect to custom tinc hostname
+  - hub      # Will connect to custom tinc hostname
 ```
 
 ### High Security Configuration

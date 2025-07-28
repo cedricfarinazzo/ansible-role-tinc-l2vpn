@@ -26,3 +26,13 @@
         update_cache: true
       when: ansible_os_family == "Debian"
       ignore_errors: true
+
+    - name: Install network utilities (Debian/Ubuntu)
+      ansible.builtin.apt:
+        name:
+          - iputils-ping
+          - iputils-arping
+          - tcpdump
+        state: present
+      when: ansible_os_family == 'Debian'
+      failed_when: false

@@ -12,11 +12,11 @@ Port = {{ hostvars[item]['tinc_port'] | default(tinc_port) }}
 {% endif %}
 
 {% if hostvars[item]['tinc_ip'] | default('') %}
-Subnet = {{ hostvars[item]['tinc_ip'] }}/{{ tinc_netmask }}
+Subnet = {{ hostvars[item]['tinc_ip'] }}/32
 {% else %}
 # Auto-assign tinc IP based on host index
 {% set host_index = (groups['all'].index(item) + 1) %}
-Subnet = {{ tinc_address_prefix }}.{{ host_index }}/{{ tinc_netmask }}
+Subnet = {{ tinc_address_prefix }}.{{ host_index }}/32
 {% endif %}
 
 # Public key

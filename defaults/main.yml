@@ -7,10 +7,15 @@ tinc_service_enabled: true
 
 # Tinc network configuration
 tinc_netname: l2vpn
-tinc_interface: tinc0
 tinc_mode: switch
 tinc_port: 655
 tinc_device_type: tap
+
+# Tinc hostname configuration
+# Override this variable to set a custom tinc hostname for this host
+# If not set, a sanitized version of inventory_hostname will be used
+# Tinc hostnames must contain only [A-Za-z0-9_] characters
+tinc_hostname: ""
 
 # Network configuration
 tinc_address_prefix: "10.20.20"

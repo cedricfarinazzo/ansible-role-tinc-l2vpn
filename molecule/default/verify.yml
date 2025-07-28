@@ -1,7 +1,7 @@
 ---
 - name: Verify
   hosts: all
-  gather_facts: false
+  gather_facts: true
   vars:
     tinc_key_rotation_days: 30
   tasks:

@@ -1,4 +1,17 @@
 ---
+# Determine tinc hostname (sanitized version of inventory hostname)
+- name: Set tinc hostname
+  ansible.builtin.set_fact:
+    tinc_node_name: >-
+      {{
+        tinc_hostname if tinc_hostname != '' 
+        else inventory_hostname | regex_replace('[^A-Za-z0-9_]', '_')
+      }}
+
+- name: Display tinc hostname mapping
+  ansible.builtin.debug:
+    msg: "Tinc hostname for {{ inventory_hostname }}: {{ tinc_node_name }}"
+
 # Include tasks based on the operating system family
 - name: Include OS-specific variables
   ansible.builtin.include_vars: "{{ item }}"
@@ -170,6 +183,20 @@
   when: groups['all'] | length > 1
   ignore_errors: "{{ ansible_check_mode }}"
 
+# Validate tinc hostname uniqueness across all hosts
+- name: Check for duplicate tinc hostnames
+  ansible.builtin.fail:
+    msg: >-
+      Duplicate tinc hostname detected: {{ hostvars[item]['tinc_node_name'] }}.
+      Multiple inventory hostnames map to the same sanitized tinc hostname.
+      Please set unique tinc_hostname variables for affected hosts.
+      Affected hosts: {{ groups['all'] | select('extract', hostvars, 'tinc_node_name') | select('==', hostvars[item]['tinc_node_name']) | list }}
+  when: 
+    - groups['all'] | map('extract', hostvars, 'tinc_node_name') | select('==', hostvars[item]['tinc_node_name']) | list | length > 1
+  with_items: "{{ groups['all'] }}"
+  run_once: true
+  delegate_to: localhost
+
 # Configure tinc network
 - name: Generate tinc network configuration
   ansible.builtin.template:
@@ -205,7 +232,7 @@
 - name: Generate host configuration files
   ansible.builtin.template:
     src: host.j2
-    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/hosts/{{ hostvars[item]['inventory_hostname'] }}"
+    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/hosts/{{ hostvars[item]['tinc_hostname'] | default('') if hostvars[item]['tinc_hostname'] | default('') != '' else item | regex_replace('[^A-Za-z0-9_]', '_') }}"
     mode: '0644'
     owner: root
     group: root
@@ -220,7 +247,7 @@
 - name: Generate own host configuration file
   ansible.builtin.template:
     src: host.j2
-    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/hosts/{{ inventory_hostname }}"
+    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/hosts/{{ tinc_node_name }}"
     mode: '0644'
     owner: root
     group: root
