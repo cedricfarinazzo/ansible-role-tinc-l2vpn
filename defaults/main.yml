@@ -46,7 +46,7 @@ tinc_client_only_peers: []
 
 # Key rotation configuration
 tinc_key_rotation_enabled: false      # Enable automatic key rotation
-tinc_key_rotation_days: 365           # Rotate keys every X days
+tinc_key_rotation_days: 30           # Rotate keys every X days
 
 # Connection management
 tinc_connect_to: []                   # Explicit list of hosts to connect to (empty = connect to all)

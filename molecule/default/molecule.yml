@@ -40,6 +40,8 @@ provisioner:
     group_vars:
       all:
         tinc_debug_level: 2
+        tinc_key_rotation_enabled: true
+        tinc_key_rotation_days: 30
     host_vars:
       tinc-node1:
         bridge_ip: "172.20.0.11"
@@ -49,3 +51,32 @@ provisioner:
         bridge_ip: "172.20.0.13"
 verifier:
   name: ansible
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+scenario:
+  name: default
+  create_sequence:
+    - create
+  check_sequence:
+    - create
+    - converge
+    - check
+  converge_sequence:
+    - create
+    - prepare
+    - converge
+  destroy_sequence:
+    - destroy
+  test_sequence:
+    - create
+    - prepare
+    - converge # install the role
+    - verify
+    - idempotence
+    - verify
+    - side_effect # run side effect playbook to trigger key rotation
+    - converge # Rotate keys
+    - verify
+    - destroy

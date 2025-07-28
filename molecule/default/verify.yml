@@ -2,6 +2,8 @@
 - name: Verify
   hosts: all
   gather_facts: false
+  vars:
+    tinc_key_rotation_days: 30
   tasks:
     - name: Check tinc configuration files
       ansible.builtin.stat:
@@ -49,9 +51,9 @@
       failed_when: false
       become: true
 
-    - name: Display configuration check results  
-      ansible.builtin.debug:
-        var: config_check.stdout_lines
+    #- name: Display configuration check results  
+    #  ansible.builtin.debug:
+    #    var: config_check.stdout_lines
 
     - name: Verify systemd service file exists
       ansible.builtin.stat:
@@ -59,10 +61,102 @@
       register: service_file
       become: true
 
-    - name: Display service status
-      ansible.builtin.debug:
-        msg: "Service file exists: {{ service_file.stat.exists }}"
+    #- name: Display service status
+    #  ansible.builtin.debug:
+    #    msg: "Service file exists: {{ service_file.stat.exists }}"
 
     - name: Show created configuration files
       ansible.builtin.debug:
         msg: "Role deployment completed successfully - all configuration files created"
+
+    - name: Check if l2vpn interfaces exists
+      ansible.builtin.command: ip link show l2vpn
+      register: tinc_l2vpn_interface_result
+      changed_when: false
+
+    - name: Check if br0 interfaces exists
+      ansible.builtin.command: ip link show br0
+      register: tinc_br0_interface_result
+      changed_when: false
+
+    - name: Check current private key age
+      ansible.builtin.stat:
+        path: /etc/tinc/l2vpn/rsa_key.priv
+      register: current_key_stat
+
+    - name: Display current key age
+      ansible.builtin.debug:
+        msg: >-
+          Current private key age: 
+          {{ ((ansible_date_time.epoch | int) - (current_key_stat.stat.mtime | default(0))) // 86400 }} days old
+      when: current_key_stat.stat.exists
+
+    # failed if current key is older than rotation threshold
+    - name: Fail if current key is older than rotation threshold
+      ansible.builtin.fail:
+        msg: >-
+          Current private key is too old ({{ ((ansible_date_time.epoch | int) - (current_key_stat.stat.mtime | default(0))) // 86400 }} days old).
+          Key rotation may have failed.
+      when: current_key_stat.stat.exists and
+            ((ansible_date_time.epoch | int) - (current_key_stat.stat.mtime | default(0))) // 86400 >= tinc_key_rotation_days | int
+
+    # Connectivity tests
+    - name: Get other Tinc nodes
+      ansible.builtin.set_fact:
+        other_tinc_nodes: "{{ groups['all'] | difference([inventory_hostname]) }}"
+
+    # Get Tinc IP addresses from actual interfaces
+    - name: Get IP for current node from interface
+      ansible.builtin.shell: |
+        ip addr show br0 | grep -oP 'inet \K[^/]+' | head -1
+      register: current_tinc_ip_result
+      changed_when: false
+      failed_when: false
+
+    - name: Set current Tinc IP fact
+      ansible.builtin.set_fact:
+        current_tinc_ip: "{{ current_tinc_ip_result.stdout | default('N/A') }}"
+
+    - name: Display current Tinc IP
+      ansible.builtin.debug:
+        msg: "Current Tinc IP for {{ inventory_hostname }}: {{ current_tinc_ip }}"
+
+    - name: Gather Tinc IPs from other hosts
+      ansible.builtin.shell: |
+        ip addr show br0 | grep -oP 'inet \K[^/]+' | head -1
+      register: tinc_ip_result
+      changed_when: false
+      failed_when: false
+      delegate_to: "{{ item }}"
+      loop: "{{ other_tinc_nodes }}"
+
+    - name: Build peer IP list
+      ansible.builtin.set_fact:
+        peer_ips: "{{ tinc_ip_result.results | selectattr('stdout', 'defined') | selectattr('stdout', '!=', '') | map(attribute='stdout') | list }}"
+
+    - name: Display Tinc peer IPs
+      ansible.builtin.debug:
+        msg: >-
+          Peer IPs for {{ inventory_hostname }}:
+          {% if peer_ips %}
+          {{ peer_ips | join(', ') }}
+          {% else %}
+          No peers found
+          {% endif %}
+
+    - name: Test Tinc connectivity to other nodes
+      ansible.builtin.shell: |
+        ping -c 1 -W 5 {{ item }}
+      register: tinc_ping_result
+      changed_when: false
+      loop: "{{ peer_ips }}"
+      when: peer_ips | length > 0
+
+    - name: Display Tinc ping results
+      ansible.builtin.debug:
+        msg: >-
+          Tinc ping from {{ inventory_hostname }} ({{ current_tinc_ip }}) to
+          peer ({{ item.item }}):
+          {{ 'Success' if item.rc == 0 else 'Failed' }}
+      loop: "{{ tinc_ping_result.results | default([]) }}"
+      when: tinc_ping_result is defined and tinc_ping_result.results is defined
