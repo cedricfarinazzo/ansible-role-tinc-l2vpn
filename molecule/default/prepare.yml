@@ -1,0 +1,28 @@
+---
+# Prepare Docker containers for testing by ensuring package repositories are available
+- name: Prepare containers
+  hosts: all
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Update apt cache (Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Ensure universe repository is enabled (Ubuntu)
+      ansible.builtin.apt_repository:
+        repo: "deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe"
+        state: present
+        update_cache: true
+      when: 
+        - ansible_distribution == "Ubuntu"
+        - ansible_distribution_release is defined
+      ignore_errors: true
+
+    - name: Update package cache after repository changes
+      ansible.builtin.apt:
+        update_cache: true
+      when: ansible_os_family == "Debian"
+      ignore_errors: true

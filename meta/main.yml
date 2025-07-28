@@ -1,0 +1,32 @@
+---
+galaxy_info:
+  role_name: tinc_l2vpn
+  author: cedricfarinazzo
+  description: >-
+    An Ansible Role that sets up a full mesh tinc network with
+    L2VPN capabilities using native Linux bridging
+  license: MIT
+  min_ansible_version: "2.9"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - focal
+        - jammy
+        - noble
+    - name: EL  # Enterprise Linux (RHEL, CentOS, etc.)
+      versions:
+        - "8"
+        - "9"
+  galaxy_tags:
+    - tinc
+    - vpn
+    - l2vpn
+    - networking
+    - bridge
+    - mesh
+
+dependencies: []

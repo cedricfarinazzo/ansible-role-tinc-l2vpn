@@ -1,0 +1,74 @@
+---
+# Tinc package and service settings
+tinc_package: tinc
+tinc_package_state: present
+tinc_service_state: started
+tinc_service_enabled: true
+
+# Tinc network configuration
+tinc_netname: l2vpn
+tinc_interface: tinc0
+tinc_mode: switch
+tinc_port: 655
+tinc_device_type: tap
+
+# Network configuration
+tinc_address_prefix: "10.20.20"
+tinc_netmask: 24
+
+# Bridge configuration
+bridge_interface: br0
+bridge_address_prefix: "172.20.0"
+bridge_netmask: 24
+
+# IP address override configuration
+# Use this to override the automatic IP assignment for specific hosts
+# Example: tinc_ip: "10.20.20.50"
+# If not set, the IP will be automatically assigned based on host index
+tinc_ip: ""
+
+# Bridge IP address override configuration
+# Use this to override the automatic bridge IP assignment for specific hosts
+# Example: bridge_ip: "172.20.0.50"
+# If not set, the IP will be automatically assigned based on host index
+bridge_ip: ""
+
+# Endpoint override configuration
+# Use this to override the automatic endpoint assignment for specific hosts
+# Example: tinc_endpoint: "example.com" or "1.2.3.4"
+# If not set, the endpoint will be automatically assigned using ansible_default_ipv4.address
+tinc_endpoint: ""
+
+# Advanced endpoint configuration
+# List of hosts for which this node should NOT specify addresses
+# Useful when this node is client-only to certain peers
+tinc_client_only_peers: []
+
+# Key rotation configuration
+tinc_key_rotation_enabled: false      # Enable automatic key rotation
+tinc_key_rotation_days: 365           # Rotate keys every X days
+
+# Connection management
+tinc_connect_to: []                   # Explicit list of hosts to connect to (empty = connect to all)
+tinc_max_timeout: 300                 # Maximum timeout for connections
+tinc_ping_timeout: 60                 # Ping timeout
+
+# Security settings
+tinc_cipher: "aes-256-cbc"           # Encryption cipher
+tinc_digest: "sha256"                # Hash algorithm
+tinc_mac_length: 8                   # MAC length
+
+# Process and daemon settings
+tinc_user: tinc
+tinc_group: tinc
+tinc_chroot: true
+tinc_pid_file: "/var/run/tinc.{{ tinc_netname }}.pid"
+
+# Logging configuration
+tinc_debug_level: 1                  # Debug level (0-5)
+tinc_log_file: ""                    # Log file path (empty = syslog)
+
+# Paths configuration
+tinc_config_path: "/etc/tinc"
+tinc_systemd_path: "/etc/systemd/system"
+tinc_networks_file: "/etc/tinc/nets.boot"

@@ -1,0 +1,251 @@
+---
+# Include tasks based on the operating system family
+- name: Include OS-specific variables
+  ansible.builtin.include_vars: "{{ item }}"
+  with_first_found:
+    - "{{ ansible_os_family }}.yml"
+    - "{{ ansible_distribution }}.yml"
+    - default.yml
+  tags:
+    - always
+
+# Install required packages
+- name: Install tinc package
+  ansible.builtin.package:
+    name: "{{ tinc_package }}"
+    state: "{{ tinc_package_state }}"
+  become: true
+  notify: restart tinc
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Install network tools
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ required_packages }}"
+  become: true
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Enable IPv4 forwarding
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^net.ipv4.ip_forward'
+    line: 'net.ipv4.ip_forward = 1'
+    create: true
+  become: true
+  notify: Reload sysctl
+
+- name: Enable IPv6 forwarding
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^net.ipv6.conf.all.forwarding'
+    line: 'net.ipv6.conf.all.forwarding = 1'
+    create: true
+  become: true
+  notify: Reload sysctl
+
+# Create tinc network directory
+- name: Create tinc network directory
+  ansible.builtin.file:
+    path: "{{ tinc_config_path }}/{{ tinc_netname }}"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  become: true
+
+- name: Create tinc network hosts directory
+  ansible.builtin.file:
+    path: "{{ tinc_config_path }}/{{ tinc_netname }}/hosts"
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  become: true
+
+# Generate tinc keys (with optional rotation)
+- name: Check private key age for rotation
+  ansible.builtin.stat:
+    path: "{{ tinc_config_path }}/{{ tinc_netname }}/rsa_key.priv"
+  register: private_key_stat
+  become: true
+
+- name: Calculate key age in days
+  ansible.builtin.set_fact:
+    key_age_days: "{{ ((ansible_date_time.epoch | int) - (private_key_stat.stat.mtime | default(0))) // 86400 }}"
+  when: private_key_stat.stat.exists
+
+- name: Determine if key rotation is needed
+  ansible.builtin.set_fact:
+    rotation_needed: >-
+      {{
+        tinc_key_rotation_enabled | bool and
+        private_key_stat.stat.exists and
+        key_age_days | int >= tinc_key_rotation_days | int
+      }}
+
+- name: Log key rotation status
+  ansible.builtin.debug:
+    msg: >-
+      Key rotation for {{ inventory_hostname }}:
+      {% if private_key_stat.stat.exists %}
+      Age={{ key_age_days }} days,
+      Threshold={{ tinc_key_rotation_days }} days,
+      Needed={{ rotation_needed }}
+      {% else %}
+      No existing key, will generate new one
+      {% endif %}
+
+- name: Create tinc backups directory
+  ansible.builtin.file:
+    path: "{{ tinc_config_path }}/{{ tinc_netname }}/backups"
+    state: directory
+    mode: '0600'
+    owner: root
+    group: root
+  become: true
+  when: tinc_key_rotation_enabled | bool
+
+- name: Backup old private key before rotation
+  ansible.builtin.copy:
+    src: "{{ tinc_config_path }}/{{ tinc_netname }}/rsa_key.priv"
+    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/backups/rsa_key.priv_{{ ansible_date_time.iso8601_basic_short }}"
+    remote_src: true
+    backup: false
+    mode: "0600"
+    owner: root
+    group: root
+  become: true
+  when:
+    - rotation_needed | bool
+    - private_key_stat.stat.exists
+  ignore_errors: true
+
+- name: Generate tinc key pair (initial or rotated)
+  ansible.builtin.shell: |
+    echo "" | tincd -n {{ tinc_netname }} -K4096
+  become: true
+  when: not private_key_stat.stat.exists or rotation_needed | bool
+  register: key_generated
+  args:
+    chdir: "{{ tinc_config_path }}/{{ tinc_netname }}"
+
+- name: Set proper permissions on private key
+  ansible.builtin.file:
+    path: "{{ tinc_config_path }}/{{ tinc_netname }}/rsa_key.priv"
+    mode: '0600'
+    owner: root
+    group: root
+  become: true
+
+- name: Log key generation
+  ansible.builtin.debug:
+    msg: >-
+      {% if not private_key_stat.stat.exists %}
+      Generated new key pair for {{ inventory_hostname }}
+      {% elif rotation_needed | bool %}
+      Rotated key pair for {{ inventory_hostname }} ({{ key_age_days }} days old)
+      {% endif %}
+  when: key_generated is changed
+
+# Read the public key
+- name: Read tinc public key
+  ansible.builtin.slurp:
+    src: "{{ tinc_config_path }}/{{ tinc_netname }}/rsa_key.pub"
+  register: tinc_public_key_encoded
+  become: true
+
+- name: Set tinc public key fact
+  ansible.builtin.set_fact:
+    tinc_public_key: "{{ tinc_public_key_encoded['content'] | b64decode | trim }}"
+  when: tinc_public_key_encoded is defined
+
+# Exchange public keys (gather facts from all hosts)
+- name: Gather facts from all hosts for key exchange
+  ansible.builtin.setup:
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ groups['all'] }}"
+  run_once: true
+  when: groups['all'] | length > 1
+  ignore_errors: "{{ ansible_check_mode }}"
+
+# Configure tinc network
+- name: Generate tinc network configuration
+  ansible.builtin.template:
+    src: tinc.conf.j2
+    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/tinc.conf"
+    mode: '0644'
+    owner: root
+    group: root
+  become: true
+  notify: restart tinc
+
+- name: Generate tinc-up script
+  ansible.builtin.template:
+    src: tinc-up.j2
+    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/tinc-up"
+    mode: '0755'
+    owner: root
+    group: root
+  become: true
+  notify: restart tinc
+
+- name: Generate tinc-down script
+  ansible.builtin.template:
+    src: tinc-down.j2
+    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/tinc-down"
+    mode: '0755'
+    owner: root
+    group: root
+  become: true
+  notify: restart tinc
+
+# Create host configuration files for all nodes in the mesh
+- name: Generate host configuration files
+  ansible.builtin.template:
+    src: host.j2
+    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/hosts/{{ hostvars[item]['inventory_hostname'] }}"
+    mode: '0644'
+    owner: root
+    group: root
+  become: true
+  with_items: "{{ groups['all'] }}"
+  when:
+    - item != inventory_hostname
+    - hostvars[item]['tinc_public_key'] is defined
+  notify: restart tinc
+
+# Create own host file
+- name: Generate own host configuration file
+  ansible.builtin.template:
+    src: host.j2
+    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/hosts/{{ inventory_hostname }}"
+    mode: '0644'
+    owner: root
+    group: root
+  become: true
+  vars:
+    item: "{{ inventory_hostname }}"
+  notify: restart tinc
+
+# Configure network boot
+- name: Add network to nets.boot
+  ansible.builtin.lineinfile:
+    path: "{{ tinc_networks_file }}"
+    line: "{{ tinc_netname }}"
+    create: true
+    mode: '0644'
+    owner: root
+    group: root
+  become: true
+
+# Enable and start tinc service
+- name: Enable and start tinc service
+  ansible.builtin.service:
+    name: "tinc@{{ tinc_netname }}"
+    state: "{{ tinc_service_state }}"
+    enabled: "{{ tinc_service_enabled }}"
+  become: true
+  register: tinc_service
+  ignore_errors: "{{ ansible_check_mode }}"

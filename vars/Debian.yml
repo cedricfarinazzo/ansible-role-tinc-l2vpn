@@ -1,0 +1,11 @@
+---
+# Debian family specific variables
+tinc_package: tinc
+tinc_user: tinc
+tinc_group: tinc
+
+# Network tools required for Debian/Ubuntu
+required_packages:
+  - bridge-utils
+  - iproute2
+  - iptables
