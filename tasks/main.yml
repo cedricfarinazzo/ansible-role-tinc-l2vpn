@@ -7,7 +7,7 @@
   ansible.builtin.set_fact:
     tinc_node_name: >-
       {{
-        tinc_hostname if tinc_hostname != '' 
+        tinc_hostname if tinc_hostname != ''
         else inventory_hostname | regex_replace('[^A-Za-z0-9_]', '_')
       }}
 
@@ -55,6 +55,7 @@
     regexp: '^net.ipv4.ip_forward'
     line: 'net.ipv4.ip_forward = 1'
     create: true
+    mode: '0644'
   become: true
   notify: Reload sysctl
 
@@ -64,6 +65,7 @@
     regexp: '^net.ipv6.conf.all.forwarding'
     line: 'net.ipv6.conf.all.forwarding = 1'
     create: true
+    mode: '0644'
   become: true
   notify: Reload sysctl
 
@@ -197,12 +199,14 @@
   when:
     - rotation_needed | bool
     - private_key_stat.stat.exists
-  ignore_errors: true
+  failed_when: false
 
 - name: Backup old host file before rotation
   ansible.builtin.copy:
     src: "{{ tinc_config_path }}/{{ tinc_netname }}/hosts/{{ tinc_node_name }}"
-    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/backups/{{ tinc_node_name }}_{{ ansible_date_time.iso8601_basic_short }}"
+    dest: >-
+      {{ tinc_config_path }}/{{ tinc_netname }}/backups/{{ tinc_node_name }}_{{
+      ansible_date_time.iso8601_basic_short }}
     remote_src: true
     backup: false
     mode: "0644"
@@ -212,7 +216,7 @@
   when:
     - rotation_needed | bool
     - private_key_stat.stat.exists
-  ignore_errors: true
+  failed_when: false
 
 # 6c. Generate host keys (tinc will write public key directly to host file)
 - name: Generate tinc key pair (initial or rotated)
@@ -223,6 +227,7 @@
   register: key_generated
   args:
     chdir: "{{ tinc_config_path }}/{{ tinc_netname }}"
+  changed_when: key_generated.rc == 0
 
 - name: Set proper permissions on private key
   ansible.builtin.file:
@@ -254,7 +259,9 @@
 
 - name: Extract public key from host file
   ansible.builtin.set_fact:
-    tinc_public_key: "{{ tinc_host_file_encoded['content'] | b64decode | regex_search('-----BEGIN RSA PUBLIC KEY-----[\\s\\S]*?-----END RSA PUBLIC KEY-----') }}"
+    tinc_public_key: >-
+      {{ tinc_host_file_encoded['content'] | b64decode
+      | regex_search('-----BEGIN RSA PUBLIC KEY-----[\\s\\S]*?-----END RSA PUBLIC KEY-----') }}
   when: tinc_host_file_encoded is defined
 
 # ====================================================================
@@ -278,9 +285,13 @@
       Duplicate tinc hostname detected: {{ hostvars[item]['tinc_node_name'] }}.
       Multiple inventory hostnames map to the same sanitized tinc hostname.
       Please set unique tinc_hostname variables for affected hosts.
-      Affected hosts: {{ groups['all'] | select('extract', hostvars, 'tinc_node_name') | select('==', hostvars[item]['tinc_node_name']) | list }}
-  when: 
-    - groups['all'] | map('extract', hostvars, 'tinc_node_name') | select('==', hostvars[item]['tinc_node_name']) | list | length > 1
+      Affected hosts: >-
+        {{ groups['all'] | select('extract', hostvars, 'tinc_node_name')
+        | select('==', hostvars[item]['tinc_node_name']) | list }}
+  when:
+    - >-
+      groups['all'] | map('extract', hostvars, 'tinc_node_name')
+      | select('==', hostvars[item]['tinc_node_name']) | list | length > 1
   with_items: "{{ groups['all'] }}"
   run_once: true
   delegate_to: localhost
@@ -289,7 +300,10 @@
 - name: Generate host configuration files for other nodes
   ansible.builtin.template:
     src: host.j2
-    dest: "{{ tinc_config_path }}/{{ tinc_netname }}/hosts/{{ hostvars[item]['tinc_hostname'] | default('') if hostvars[item]['tinc_hostname'] | default('') != '' else item | regex_replace('[^A-Za-z0-9_]', '_') }}"
+    dest: >-
+      {{ tinc_config_path }}/{{ tinc_netname }}/hosts/{{
+      hostvars[item]['tinc_hostname'] | default('') if hostvars[item]['tinc_hostname']
+      | default('') != '' else item | regex_replace('[^A-Za-z0-9_]', '_') }}
     mode: '0644'
     owner: root
     group: root

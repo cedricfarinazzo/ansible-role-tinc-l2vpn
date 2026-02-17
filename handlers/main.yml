@@ -28,7 +28,7 @@
   listen: "stop tinc"
 
 - name: Reload sysctl
-  ansible.builtin.shell: sysctl -p
+  ansible.builtin.command: sysctl -p
   become: true
   listen: "Reload sysctl"
-
+  changed_when: true

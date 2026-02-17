@@ -66,7 +66,7 @@
     - name: Display current key age
       ansible.builtin.debug:
         msg: >-
-          Current private key age: 
+          Current private key age:
           {{ ((ansible_date_time.epoch | int) - (current_key_stat.stat.mtime | default(0))) // 86400 }} days old
       when: current_key_stat.stat.exists
 
@@ -74,10 +74,12 @@
     - name: Fail if current key is older than rotation threshold
       ansible.builtin.fail:
         msg: >-
-          Current private key is too old ({{ ((ansible_date_time.epoch | int) - (current_key_stat.stat.mtime | default(0))) // 86400 }} days old).
+          Current private key is too old
+          ({{ ((ansible_date_time.epoch | int) - (current_key_stat.stat.mtime | default(0))) // 86400 }} days old).
           Key rotation may have failed.
       when: current_key_stat.stat.exists and
-            ((ansible_date_time.epoch | int) - (current_key_stat.stat.mtime | default(0))) // 86400 >= tinc_key_rotation_days | int
+            ((ansible_date_time.epoch | int) - (current_key_stat.stat.mtime | default(0))) // 86400
+            >= tinc_key_rotation_days | int
 
     # Connectivity tests
     - name: Get other Tinc nodes
@@ -111,7 +113,12 @@
 
     - name: Build peer IP list
       ansible.builtin.set_fact:
-        peer_ips: "{{ tinc_ip_result.results | selectattr('stdout', 'defined') | selectattr('stdout', '!=', '') | map(attribute='stdout') | list }}"
+        peer_ips: >-
+          {{ tinc_ip_result.results
+          | selectattr('stdout', 'defined')
+          | selectattr('stdout', '!=', '')
+          | map(attribute='stdout')
+          | list }}
 
     - name: Display Tinc peer IPs
       ansible.builtin.debug:

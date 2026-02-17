@@ -16,16 +16,16 @@
         repo: "deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe"
         state: present
         update_cache: true
-      when: 
+      when:
         - ansible_distribution == "Ubuntu"
         - ansible_distribution_release is defined
-      ignore_errors: true
+      failed_when: false
 
     - name: Update package cache after repository changes
       ansible.builtin.apt:
         update_cache: true
       when: ansible_os_family == "Debian"
-      ignore_errors: true
+      failed_when: false
 
     - name: Install network utilities (Debian/Ubuntu)
       ansible.builtin.apt:

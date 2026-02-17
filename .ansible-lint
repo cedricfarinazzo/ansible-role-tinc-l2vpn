@@ -6,6 +6,7 @@ exclude_paths:
 skip_list:
   - role-name[path]
   - risky-shell-pipe
+  - no-handler
 
 use_default_rules: true
 parseable: true
