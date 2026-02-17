@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+<style>
+  text { font-family: monospace; font-size: 14px; }
+  .folder { fill: #4A90E2; }
+  .file { fill: #50C878; }
+  .title { font-size: 18px; font-weight: bold; fill: #333; }
+  rect { rx: 3; }
+</style>
+<text x="400" y="30" class="title" text-anchor="middle">Ansible Role Directory Structure</text>
+<rect x="50" y="70" width="700" height="30" class="folder"/>
+<text x="60" y="90" fill="white">ansible-role-tinc-l2vpn/</text>
+<rect x="90" y="110" width="300" height="25" class="folder"/>
+<text x="100" y="127" fill="white">tasks/</text>
+<text x="410" y="127" fill="#666" font-size="12">Task definitions and playbook logic</text>
+<rect x="90" y="145" width="300" height="25" class="folder"/>
+<text x="100" y="162" fill="white">handlers/</text>
+<text x="410" y="162" fill="#666" font-size="12">Service handlers and event responses</text>
+<rect x="90" y="180" width="300" height="25" class="folder"/>
+<text x="100" y="197" fill="white">templates/</text>
+<text x="410" y="197" fill="#666" font-size="12">Jinja2 configuration templates</text>
+<rect x="90" y="215" width="300" height="25" class="folder"/>
+<text x="100" y="232" fill="white">defaults/</text>
+<text x="410" y="232" fill="#666" font-size="12">Default variable values</text>
+<rect x="90" y="250" width="300" height="25" class="folder"/>
+<text x="100" y="267" fill="white">vars/</text>
+<text x="410" y="267" fill="#666" font-size="12">OS-specific variables</text>
+<rect x="90" y="285" width="300" height="25" class="folder"/>
+<text x="100" y="302" fill="white">meta/</text>
+<text x="410" y="302" fill="#666" font-size="12">Role metadata and dependencies</text>
+</svg>

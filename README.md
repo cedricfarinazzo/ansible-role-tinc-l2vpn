@@ -125,6 +125,14 @@ tinc_log_file: ""                    # Log file path (empty = syslog)
 
 ## 🏗️ Network Architecture
 
+### 📊 Topology Visualizations
+
+For a comprehensive visual understanding of the role's structure and relationships, see the **[Topology Visualizations](docs/topology/README.md)** which include:
+- Directory structure and file organization
+- Task execution flow diagrams
+- Variable definition and usage flows
+- Handler notification relationships
+
 ### Network Stack Components
 
 | Layer | Component | Purpose | Configuration |

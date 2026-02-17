@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+<defs>
+  <marker id="arrowhead3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+    <polygon points="0 0, 10 3, 0 6" fill="#E91E63"/>
+  </marker>
+</defs>
+<style>
+  text { font-family: sans-serif; font-size: 13px; }
+  .task-notify { fill: #E3F2FD; stroke: #2196F3; stroke-width: 2; }
+  .handler { fill: #FCE4EC; stroke: #E91E63; stroke-width: 2; }
+  .title { font-size: 20px; font-weight: bold; fill: #333; }
+  .section-title { font-size: 16px; font-weight: bold; fill: #555; }
+  .notify-arrow { stroke: #E91E63; stroke-width: 2; fill: none; marker-end: url(#arrowhead3); }
+  rect { rx: 5; }
+</style>
+<text x="600" y="30" class="title" text-anchor="middle">Handler Notification Relationships</text>
+<text x="200" y="70" class="section-title">Tasks with Notifications</text>
+<rect x="50" y="100" width="350" height="40" class="task-notify"/>
+<text x="225" y="125" text-anchor="middle">Install tinc package</text>
+<rect x="50" y="155" width="350" height="40" class="task-notify"/>
+<text x="225" y="180" text-anchor="middle">Generate tinc.conf</text>
+<rect x="50" y="210" width="350" height="40" class="task-notify"/>
+<text x="225" y="235" text-anchor="middle">Generate tinc-up script</text>
+<rect x="50" y="265" width="350" height="40" class="task-notify"/>
+<text x="225" y="290" text-anchor="middle">Generate tinc-down script</text>
+<rect x="50" y="320" width="350" height="40" class="task-notify"/>
+<text x="225" y="345" text-anchor="middle">Enable IPv4 forwarding</text>
+<rect x="50" y="375" width="350" height="40" class="task-notify"/>
+<text x="225" y="400" text-anchor="middle">Enable IPv6 forwarding</text>
+<rect x="50" y="430" width="350" height="40" class="task-notify"/>
+<text x="225" y="455" text-anchor="middle">Generate host configs</text>
+<text x="950" y="70" class="section-title">Handlers</text>
+<rect x="800" y="150" width="350" height="50" class="handler"/>
+<text x="975" y="172" text-anchor="middle" font-weight="bold">restart tinc</text>
+<text x="975" y="188" text-anchor="middle" font-size="11" fill="#666">Restart tinc@{netname} service</text>
+<rect x="800" y="220" width="350" height="50" class="handler"/>
+<text x="975" y="242" text-anchor="middle" font-weight="bold">reload tinc</text>
+<text x="975" y="258" text-anchor="middle" font-size="11" fill="#666">Reload tinc@{netname} service</text>
+<rect x="800" y="290" width="350" height="50" class="handler"/>
+<text x="975" y="312" text-anchor="middle" font-weight="bold">Reload sysctl</text>
+<text x="975" y="328" text-anchor="middle" font-size="11" fill="#666">Apply sysctl configuration</text>
+<rect x="800" y="360" width="350" height="50" class="handler"/>
+<text x="975" y="382" text-anchor="middle" font-weight="bold">start tinc</text>
+<text x="975" y="398" text-anchor="middle" font-size="11" fill="#666">Start tinc@{netname} service</text>
+<rect x="800" y="430" width="350" height="50" class="handler"/>
+<text x="975" y="452" text-anchor="middle" font-weight="bold">stop tinc</text>
+<text x="975" y="468" text-anchor="middle" font-size="11" fill="#666">Stop tinc@{netname} service</text>
+<path d="M 400 120 C 600.0 120, 600.0 175, 800 175" class="notify-arrow"/>
+<path d="M 400 175 C 600.0 175, 600.0 175, 800 175" class="notify-arrow"/>
+<path d="M 400 230 C 600.0 230, 600.0 175, 800 175" class="notify-arrow"/>
+<path d="M 400 285 C 600.0 285, 600.0 175, 800 175" class="notify-arrow"/>
+<path d="M 400 340 C 600.0 340, 600.0 315, 800 315" class="notify-arrow"/>
+<path d="M 400 395 C 600.0 395, 600.0 315, 800 315" class="notify-arrow"/>
+<path d="M 400 450 C 600.0 450, 600.0 175, 800 175" class="notify-arrow"/>
+</svg>

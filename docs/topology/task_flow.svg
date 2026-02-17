@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1400" width="1200" height="1400">
+<defs>
+  <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+    <polygon points="0 0, 10 3, 0 6" fill="#666"/>
+  </marker>
+</defs>
+<style>
+  text { font-family: sans-serif; font-size: 13px; }
+  .task { fill: #E8F4F8; stroke: #4A90E2; stroke-width: 2; }
+  .phase { fill: #FFF8E1; stroke: #FFA726; stroke-width: 2; }
+  .title { font-size: 20px; font-weight: bold; fill: #333; }
+  .phase-label { font-size: 14px; font-weight: bold; fill: #E65100; }
+  .arrow { stroke: #666; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+  rect { rx: 5; }
+</style>
+<text x="600" y="30" class="title" text-anchor="middle">Task Execution Flow</text>
+<rect x="350" y="70" width="500" height="35" class="phase"/>
+<text x="600" y="93" class="phase-label" text-anchor="middle">1. Hostname Setup</text>
+<rect x="380" y="115" width="440" height="50" class="task"/>
+<text x="600" y="145" text-anchor="middle">Set tinc hostname</text>
+<line x1="600" y1="165" x2="600" y2="175" class="arrow"/>
+<rect x="380" y="175" width="440" height="50" class="task"/>
+<text x="600" y="205" text-anchor="middle">Display hostname mapping</text>
+<rect x="350" y="245" width="500" height="35" class="phase"/>
+<text x="600" y="268" class="phase-label" text-anchor="middle">2. Package Installation</text>
+<rect x="380" y="290" width="440" height="50" class="task"/>
+<text x="600" y="320" text-anchor="middle">Include OS-specific variables</text>
+<line x1="600" y1="340" x2="600" y2="350" class="arrow"/>
+<rect x="380" y="350" width="440" height="50" class="task"/>
+<text x="600" y="380" text-anchor="middle">Install tinc package</text>
+<line x1="600" y1="400" x2="600" y2="410" class="arrow"/>
+<rect x="380" y="410" width="440" height="50" class="task"/>
+<text x="600" y="440" text-anchor="middle">Install network tools</text>
+<rect x="350" y="480" width="500" height="35" class="phase"/>
+<text x="600" y="503" class="phase-label" text-anchor="middle">3. System Configuration</text>
+<rect x="380" y="525" width="440" height="50" class="task"/>
+<text x="600" y="555" text-anchor="middle">Enable IPv4 forwarding</text>
+<line x1="600" y1="575" x2="600" y2="585" class="arrow"/>
+<rect x="380" y="585" width="440" height="50" class="task"/>
+<text x="600" y="615" text-anchor="middle">Enable IPv6 forwarding</text>
+<rect x="350" y="655" width="500" height="35" class="phase"/>
+<text x="600" y="678" class="phase-label" text-anchor="middle">4. Directory Creation</text>
+<rect x="380" y="700" width="440" height="50" class="task"/>
+<text x="600" y="730" text-anchor="middle">Create tinc network directory</text>
+<line x1="600" y1="750" x2="600" y2="760" class="arrow"/>
+<rect x="380" y="760" width="440" height="50" class="task"/>
+<text x="600" y="790" text-anchor="middle">Create hosts directory</text>
+<line x1="600" y1="810" x2="600" y2="820" class="arrow"/>
+<rect x="380" y="820" width="440" height="50" class="task"/>
+<text x="600" y="850" text-anchor="middle">Create backups directory</text>
+<rect x="350" y="890" width="500" height="35" class="phase"/>
+<text x="600" y="913" class="phase-label" text-anchor="middle">5. Configuration Files</text>
+<rect x="380" y="935" width="440" height="50" class="task"/>
+<text x="600" y="965" text-anchor="middle">Generate tinc.conf</text>
+<line x1="600" y1="985" x2="600" y2="995" class="arrow"/>
+<rect x="380" y="995" width="440" height="50" class="task"/>
+<text x="600" y="1025" text-anchor="middle">Generate tinc-up script</text>
+<line x1="600" y1="1045" x2="600" y2="1055" class="arrow"/>
+<rect x="380" y="1055" width="440" height="50" class="task"/>
+<text x="600" y="1085" text-anchor="middle">Generate tinc-down script</text>
+<rect x="350" y="1125" width="500" height="35" class="phase"/>
+<text x="600" y="1148" class="phase-label" text-anchor="middle">6. Key Management</text>
+<rect x="380" y="1170" width="440" height="50" class="task"/>
+<text x="600" y="1200" text-anchor="middle">Check private key age</text>
+<line x1="600" y1="1220" x2="600" y2="1230" class="arrow"/>
+<rect x="380" y="1230" width="440" height="50" class="task"/>
+<text x="600" y="1260" text-anchor="middle">Calculate key age</text>
+<line x1="600" y1="1280" x2="600" y2="1290" class="arrow"/>
+<rect x="380" y="1290" width="440" height="50" class="task"/>
+<text x="600" y="1320" text-anchor="middle">Backup old keys</text>
+<line x1="600" y1="1340" x2="600" y2="1350" class="arrow"/>
+<rect x="380" y="1350" width="440" height="50" class="task"/>
+<text x="600" y="1380" text-anchor="middle">Generate new key pair</text>
+<rect x="350" y="1420" width="500" height="35" class="phase"/>
+<text x="600" y="1443" class="phase-label" text-anchor="middle">7. Key Exchange</text>
+<rect x="380" y="1465" width="440" height="50" class="task"/>
+<text x="600" y="1495" text-anchor="middle">Read public key</text>
+<line x1="600" y1="1515" x2="600" y2="1525" class="arrow"/>
+<rect x="380" y="1525" width="440" height="50" class="task"/>
+<text x="600" y="1555" text-anchor="middle">Gather facts from all hosts</text>
+<line x1="600" y1="1575" x2="600" y2="1585" class="arrow"/>
+<rect x="380" y="1585" width="440" height="50" class="task"/>
+<text x="600" y="1615" text-anchor="middle">Check for duplicate hostnames</text>
+<line x1="600" y1="1635" x2="600" y2="1645" class="arrow"/>
+<rect x="380" y="1645" width="440" height="50" class="task"/>
+<text x="600" y="1675" text-anchor="middle">Generate host configs for peers</text>
+<rect x="350" y="1715" width="500" height="35" class="phase"/>
+<text x="600" y="1738" class="phase-label" text-anchor="middle">8. Service Management</text>
+<rect x="380" y="1760" width="440" height="50" class="task"/>
+<text x="600" y="1790" text-anchor="middle">Add network to nets.boot</text>
+<line x1="600" y1="1810" x2="600" y2="1820" class="arrow"/>
+<rect x="380" y="1820" width="440" height="50" class="task"/>
+<text x="600" y="1850" text-anchor="middle">Enable and start tinc service</text>
+</svg>
