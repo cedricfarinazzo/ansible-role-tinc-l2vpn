@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-02-20
+## [1.0.0] - 2025-07-29
 
 ### Added
 
@@ -25,5 +25,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated README.md with role documentation
 
-[Unreleased]: https://github.com/marcus/ansible-role-tinc-l2vpn/compare/1.0.0...HEAD
-[1.0.0]: https://github.com/marcus/ansible-role-tinc-l2vpn/releases/tag/1.0.0
+[Unreleased]: https://github.com/cedricfarinazzo/ansible-role-tinc-l2vpn/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/cedricfarinazzo/ansible-role-tinc-l2vpn/releases/tag/1.0.0
