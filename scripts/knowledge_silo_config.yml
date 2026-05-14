@@ -1,0 +1,7 @@
+# Knowledge Silo Detector configuration
+# commit_share_threshold: fraction of commits by top author to flag
+# min_commits: minimum number of commits on a directory to consider
+# time_window_months: how many months of history to analyze
+commit_share_threshold: 0.5
+min_commits: 10
+time_window_months: 12
