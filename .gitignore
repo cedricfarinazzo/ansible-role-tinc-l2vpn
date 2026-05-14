@@ -46,3 +46,5 @@ Thumbs.db
 # Temporary files
 .tmp/
 tmp/
+# Nightshift plan artifacts (keep out of version control)
+.nightshift-plan

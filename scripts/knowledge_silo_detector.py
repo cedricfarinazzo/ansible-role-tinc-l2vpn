@@ -34,7 +34,7 @@ def load_config(path: str | None):
         "time_window_months": 12,
     }
     if not os.path.exists(path):
-        return defaults
+        return defaults.copy()
     with open(path, "r", encoding="utf-8") as f:
         if yaml:
             try:
@@ -48,9 +48,25 @@ def load_config(path: str | None):
                 if ':' in line:
                     k, v = line.split(':', 1)
                     cfg[k.strip()] = v.strip()
-    # merge
-    defaults.update(cfg)
-    return defaults
+    # Normalize types: start from defaults and override with parsed values cast to proper types
+    final = defaults.copy()
+    for k, v in cfg.items():
+        if k in final:
+            try:
+                if isinstance(final[k], bool):
+                    final[k] = str(v).lower() in ("1", "true", "yes", "y", "on")
+                elif isinstance(final[k], int):
+                    final[k] = int(v)
+                elif isinstance(final[k], float):
+                    final[k] = float(v)
+                else:
+                    final[k] = v
+            except Exception:
+                # keep the parsed value if casting fails
+                final[k] = v
+        else:
+            final[k] = v
+    return final
 
 
 def git_commits_since(since_date: datetime) -> list[dict]:
@@ -91,10 +107,14 @@ def git_commits_since(since_date: datetime) -> list[dict]:
 
 
 def top_level_dir(path: str) -> str:
-    if not path or path.startswith("."):
+    if not path:
         return "."
-    parts = path.split("/")
-    return parts[0] if parts else "."
+    # normalize leading './' from git output
+    if path.startswith("./"):
+        path = path[2:]
+    if not path:
+        return "."
+    return path.split("/", 1)[0]
 
 
 def aggregate_commits(commits: list[dict]) -> dict:
