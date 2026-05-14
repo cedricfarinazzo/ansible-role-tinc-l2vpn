@@ -15,7 +15,10 @@ import subprocess
 import sys
 from collections import defaultdict
 from datetime import datetime, timedelta
-import yaml
+try:
+    import yaml
+except Exception:
+    yaml = None
 import logging
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -25,15 +28,29 @@ DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "knowledge_silo_co
 
 def load_config(path: str | None):
     path = path or DEFAULT_CONFIG_PATH
+    defaults = {
+        "commit_share_threshold": 0.5,
+        "min_commits": 10,
+        "time_window_months": 12,
+    }
     if not os.path.exists(path):
-        # defaults
-        return {
-            "commit_share_threshold": 0.5,
-            "min_commits": 10,
-            "time_window_months": 12,
-        }
+        return defaults
     with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
+        if yaml:
+            try:
+                cfg = yaml.safe_load(f) or {}
+            except Exception:
+                cfg = {}
+        else:
+            # fallback simple parser for key: value
+            cfg = {}
+            for line in f:
+                if ':' in line:
+                    k, v = line.split(':', 1)
+                    cfg[k.strip()] = v.strip()
+    # merge
+    defaults.update(cfg)
+    return defaults
 
 
 def git_commits_since(since_date: datetime) -> list[dict]:
@@ -124,7 +141,7 @@ def detect_silos(agg: dict, config: dict) -> list[dict]:
 
 def write_report(output_dir: str, report: dict):
     os.makedirs(output_dir, exist_ok=True)
-    json_path = os.path.join(output_dir, "scripts/knowledge_silo_report.json")
+    json_path = os.path.join(output_dir, "knowledge_silo_report.json")
     summary_path = os.path.join(output_dir, "summary.txt")
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2)
